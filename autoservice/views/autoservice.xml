@@ -35,11 +35,17 @@
                     </button>
                     <button 
                             name="action_order_close"  type="object" class="oe_highlight" string="Close order"
-                            icon= "fa-power-off" attrs= "{'invisible': ['|', ('closed', '=', True), ('stage_id', '!=', 5), ('cancel', '=', False)]}">
-                    </button>  
+                            icon= "fa-power-off" attrs= "{'invisible':
+                            ['|', '|',
+                            '&amp;', ('stage_id', '!=', 5), ('cancel', '=', False),
+                            '&amp;', ('cancel', '=', False), ('closed', '=', True),
+                            '&amp;', ('cancel', '=', True), ('closed', '=', True)]}">
+                    </button>
                     <button 
                             name="action_order_cancel"  type="object" class="oe_highlight" string="Cancel order2"
-                            icon= "fa-ban" attrs= "{'invisible': ['|', ['cancel', '=', True], ['stage_id', '=', 5]]}">
+                            icon= "fa-ban" attrs= "{'invisible':
+                            ['|',
+                            ['cancel', '=', True], ['stage_id', '=', 5]]}">
                     </button>
                     <button 
                             name="action_order_uncancel"  type="object" class="oe_highlight" string="Unancel order"
@@ -47,7 +53,9 @@
                     </button>
                     <button 
                             name="action_hold"  type="object" class="oe_highlight" string="Pause order"
-                            icon= "fa-pause" attrs= "{'invisible': ['|', '|', '|', ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True], ['stage_id', 'not in', [2, 3, 4]]]}">
+                            icon= "fa-pause" attrs= "{'invisible':
+                            ['|', '|', '|',
+                            ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True], ['stage_id', 'not in', [2, 3, 4]]]}">
                     </button>
                     <button 
                             name="action_unhold"  type="object" class="oe_highlight" string="Release order"
@@ -55,16 +63,24 @@
                     </button>
                     <button 
                             name="action_set_stage_new"  type="object" class="oe_highlight" string="Set stage New"
-                            icon= "fa-play" attrs= "{'invisible': ['|', '|', '|', ['stage_id', 'not in', [1]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
+                            icon= "fa-play" attrs= "{'invisible':
+                            ['|', '|', '|',
+                            ['stage_id', 'not in', [1]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
                     <button 
                             name="action_set_stage_inprogres"  type="object" class="oe_highlight" string="Set stage In progres"
-                            icon= "fa-play" attrs= "{'invisible': ['|', '|', '|', ['stage_id', 'not in', [2]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
+                            icon= "fa-play" attrs= "{'invisible':
+                            ['|', '|', '|',
+                            ['stage_id', 'not in', [2]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
                     <button 
                             name="action_set_stage_compleated"  type="object" class="oe_highlight" string="Set stage Compleated"
-                            icon= "fa-stop" attrs= "{'invisible': ['|', '|', '|', ['stage_id', 'not in', [3]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
+                            icon= "fa-stop" attrs= "{'invisible':
+                            ['|', '|', '|',
+                            ['stage_id', 'not in', [3]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
                     <button 
                             name="action_set_stage_finished"  type="object" class="oe_highlight" string="Set stage Finished"
-                            icon= "fa-circle" attrs= "{'invisible': ['|', '|', '|', ['stage_id', 'not in', [4]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
+                            icon= "fa-circle" attrs= "{'invisible':
+                            ['|', '|', '|',
+                            ['stage_id', 'not in', [4]], ['cancel', '=', True], ['closed', '=', True], ['on_hold', '=', True]]}"/>
 
 
                     <field name="stage_id"  widget="statusbar" statusbar_colors='{"1":"#C8342B", "2":"#C8342B"}' />
@@ -88,7 +104,7 @@
                         </h3>
                         <label for="customer_id" string="Customer" class="oe_edit_only"/>
                         <h3>
-                            <field name="customer_id" class="oe_inline" placeholder="Customer" attrs="{'readonly': [('form_data_lock', '=', True)]}"/>
+                            <field name="customer_id" class="oe_inline" placeholder="Customer" domain="[('customer', '=', True)]" attrs="{'readonly': [('form_data_lock', '=', True)]}"/>
                         </h3>
                     </div>
                     <group col="2">
@@ -104,7 +120,9 @@
                             <field name="project_id" placeholder="Project (Analytic account)" attrs="{'readonly': ['|', ('main_data_lock', '=', True), ('form_data_lock', '=', True)]}"/>
                         </group>
                         <group string="Contract" >
-                            <field name="contract_id" placeholder="please select contract (set of conditions)" domain="[('state', '=', '1')]" attrs="{'readonly': ['|', ('main_data_lock', '=', True), ('form_data_lock', '=', True)]}"/>
+                            <field name="contract_id" placeholder="please select contract (set of conditions)"
+                                   domain="['|', '&amp;', ('state', '=', '1'), ('private_contract', '=', False), '&amp;', '&amp;', ('state', '=', '1'), ('private_contract', '=', True), ('private_contract_partner', '=', customer_id)]"
+                                   attrs="{'readonly': ['|', ('main_data_lock', '=', True), ('form_data_lock', '=', True)]}"/>
                         </group>
                     </group>
                     <notebook>
@@ -138,6 +156,12 @@
                             <field name="notes" />
                         </page>
                         <page string="Order operation sets list">
+                            <label string="This section contains list of operation sets. To add sets in 'selected' list first import contract sets.
+                                 (this will import single operations too - directly in operation list)
+                                 On accepting 'selected' will be moved to 'accepted'(selected list is clean up)
+                                 and contained operations will appear in operation list(duplications are skipped except already converted to tasks (operations) )."
+                                   nolabel="1"  colspan="6" />
+                            <separator/>
                             <group string="Operation sets">
                                 <button 
                                         name="import_contract_sets"  type="object" class="oe_highlight" string="Import contract sets"
@@ -161,7 +185,9 @@
                             </group>
                         </page>
                         <page string="Order operation list" icon= "fa-play">
-                           <group>
+                            <label string="This section contains list of accepted operations.
+                                 You can convert them to project tasks (operation list will be clean up during this process)." nolabel="1"  colspan="6" />
+                            <separator/>
                             <group>
                                 <field name="test_txt" string="Opr ids" attrs="{'readonly': True, 'invisible': [['test_txt', '=', True]]}"/>
                                 <field name="order_operations_ids" string="Order operations" attrs="{'readonly' : ['|', '|', ['stage_id', 'in', [5]], ['cancel', '=', True], ['contract_operation_imported', '=', False]]}"/>
@@ -170,22 +196,25 @@
                                 <label for="project_id"/>
                                 <button 
                                         name="convert_operations_to_tasks"  type="object" class="oe_highlight" string="Convert operations to tasks"
-                                        icon= "fa-stack-exchange" attrs="{'invisible': ['|', '|', ['stage_id', 'in', [5]], ['cancel', '=', True], ['order_operations_ids', '=', False]]}">
+                                        icon= "fa-exchange" attrs="{'invisible': ['|', '|', ['stage_id', 'in', [5]], ['cancel', '=', True], ['order_operations_ids', '=', [(6, False, [])]]]}">
                                 </button>
                                 <!-- buton and task heare convert_operations_to_tasks-->
                             </group>
                             </group>
                         </page>
-                        <page string="Privacy options">
+                        <page string="Spare parts">
+                            <label string="This section contains list of spare parts and consumables according to tasks(operations)." nolabel="1"  colspan="4" />
                             <group>
 
                             </group>
                         </page>
-                        <page string="Description">
+                        <page string="Equipment">
+                            <label string="This section contains list of recommended equipment according to tasks(operations)." nolabel="1"  colspan="4" />
+                            <group>
 
                         </page>
                         <page string="Contract conditions">
-
+                            <field name="order_contract_conditions" attrs="{'readonly' : True}"/>
                         </page>
                         <page string="Other">
 

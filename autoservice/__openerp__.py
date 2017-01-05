@@ -1,6 +1,6 @@
 {
     'name' : 'Auto service',
-    'version' : '0.9.beta',
+    'version' : '0.9.5 beta',
     'author' : 'Antoan Georgieff',
     'category': 'Auto sevice',
     'license' : 'AGPL-3',

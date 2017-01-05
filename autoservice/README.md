@@ -3,6 +3,8 @@
 
 This is beta verssion for test purpouses.
 It uses only new API - Odoo v9,  posibly works on v8(not tested).
+Branch 10.0 was removed - this module is compatible.I will reopen
+10.0 branch on  v.1.0 -RC or stable.
 
 ## Installation
 
@@ -25,7 +27,7 @@ It uses only new API - Odoo v9,  posibly works on v8(not tested).
 * Future stuff:
 
     - `ORDERS` Extend fuctionality .
-    - `VEHICLES` Vast extend fuctionality.
+    - `VEHICLES` Vast extend fuctionality.In v.1.0 in separate module.
     - `CONTRACTS` Extend fuctionality.
     - `OPERATIONS` Extend fuctionality.
     - `OPERATION SETS` Extend fuctionality.

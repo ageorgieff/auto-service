@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from datetime import date, datetime, timedelta
-from openerp.exceptions import Warning
+from openerp.exceptions import UserError
 from openerp import models, fields, api, _, SUPERUSER_ID
-#from odoo.exceptions import Warning
+#from odoo.exceptions import UserError
 #from odoo import models, fields, api, _, SUPERUSER_ID
 
 
@@ -35,9 +35,9 @@ class autoservice(models.Model):
     @api.one
     def action_aprove_contract(self):
         if self.private_contract is True and not self.private_contract_partner:
-            raise Warning(_('For activating private contract select partner first.'))
+            raise UserError(_('For activating private contract select partner first.'))
         elif self.template_contract is True:
-            raise Warning(_('Template can not be set active, its purpose is to be replicated'))
+            raise UserError(_('Template can not be set active, its purpose is to be replicated'))
         else:
             self.write({
                 'contract_aproved': date.today().strftime('%Y-%m-%d'),
@@ -126,6 +126,7 @@ class asorders(models.Model):
     contract_operation_sets_imported = fields.Boolean()
     test_txt = fields.Char(string='test field')
     testt_txt = fields.Char(string='test field 2')
+    oper_help = fields.Char(string='help field')
     accepted_sets = fields.Char(string='Accepted_sets')
     contact_person = fields.Many2one('res.partner', string='Contact person')
     order_created = fields.Date(string='Order created', default=_get_date_today)
@@ -151,6 +152,8 @@ class asorders(models.Model):
     main_data_lock = fields.Boolean(string='Main data edit lock', default=False)
     form_data_lock = fields.Boolean(string='Form data edit lock', default=False)
     notes = fields.Text(string='Notes')
+   
+    order_contract_conditions = fields.Html(string='Contract general conditions', related='contract_id.contract_conditions')
 
     _sql_constraints = [('autoservice_orders_nom_unique', 'unique(nom)', 'Auto service order already exists')]
 
@@ -164,7 +167,7 @@ class asorders(models.Model):
                 ct_ids += cta_ids
             else: ct_ids = False
         else:
-            raise Warning(_('Contract must be selected before perform this operation'))
+            raise UserError(_('Contract must be selected before perform this operation'))
         return ct_ids
 
     @api.multi
@@ -223,6 +226,8 @@ class asorders(models.Model):
                     #csts_ids.append(csts_id)
                     csts_ids += csts_id
             else: csts_ids = False
+        else:
+            raise UserError(_('Contract must be selected before perform this operation'))
 
         return csts_ids
 
@@ -230,7 +235,7 @@ class asorders(models.Model):
     def import_contract_sets(self):
         a = self._get_contr_sets_operations()
         b = self._get_contr_operations()
-        if a and b:                            #if not a and not b raise Warning
+        if a and b:                            #if not a and not b raise UserError
             self._import_contract_sets()
             self._import_contract_operations()
         elif a:
@@ -241,7 +246,7 @@ class asorders(models.Model):
                 'contract_operation_sets_imported' : True
             })
         else:
-            raise Warning(_('Contract must have at least one operation or set with at least one operation'))
+            raise UserError(_('Contract must have at least one operation or set with at least one operation'))
 
         return True
 
@@ -266,9 +271,51 @@ class asorders(models.Model):
             'accepted_sets' : accsets_ids,
             'order_sets_ids': [(5, 0, 0)]
             })
+        # return True
+
+    @api.one
+    def _get_rel_project(self):
+        prj_id = self.project_id.id
+        if prj_id:
+            return prj_id
+        else:
+            raise UserError(_('Related project must be selected'))
+
+    @api.one
+    def get_customer(self):
+        cst_id = self.customer_id.id
+        if cst_id:
+            return cst_id
+        else:
+            raise UserError(_('Order customer must be selected'))
+
+    @api.multi
+    def get_oper_vals(self, op_id):
+       # op_vals = self.env['autoservice.operation'].browse(op_id).mapped('name') #, 'asoperation_code', 'asoperation_value', 'operation_order ')
+        op_vals = self.env['autoservice.operation'].search([('id', '=', op_id)]).sorted(key=lambda r: r.name)
+
+        return op_vals
 
     @api.multi
     def convert_operations_to_tasks(self):
+        prid = self._get_rel_project()
+        cstid = self.get_customer()
+        op_ids = self.mapped('order_operations_ids').ids
+        for op_id in op_ids:
+            opr_vals = self.get_oper_vals(op_id)
+            values = {'name' : opr_vals.name,
+                      'sequence' : opr_vals.operation_order,
+                      'planned_hours' : opr_vals.asoperation_value,
+                      'project_id' : prid,
+                      'user_id' : self.resp_user_id.id,
+                      'partner_id': cstid,
+                      }
+            self.env['project.project'].search([('id', '=', prid)]).update({'task_ids' : [(0, 0, values)]})
+        self.write({
+            'oper_help' : 'OK',
+            'order_operations_ids': [(5, 0, 0)]
+        })
+
         return True
         
     @api.one
